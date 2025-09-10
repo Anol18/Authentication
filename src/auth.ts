@@ -59,14 +59,16 @@ type DecodedToken = {
   permission: string;
 };
 
-
 // In-memory store for active sessions and security info
-const activeSessions = new Map<string, {
-  fingerprint: string;
-  ip: string;
-  lastActivity: number;
-  userId: string;
-}>();
+const activeSessions = new Map<
+  string,
+  {
+    fingerprint: string;
+    ip: string;
+    lastActivity: number;
+    userId: string;
+  }
+>();
 
 const config: NextAuthConfig = {
   providers: [
@@ -88,7 +90,9 @@ const config: NextAuthConfig = {
         try {
           // Validate credentials
           const { username, password } = loginSchema.parse(credentials);
-
+          // const contentType = request.headers?.get("content-type");
+          // console.log("contentType",contentType);
+          request.headers.set("content-type", "application/json");
           // Get user from database
           const response = await signin({
             username,
@@ -114,7 +118,7 @@ const config: NextAuthConfig = {
           if (request) {
             const fingerprint = generateFingerprint(request);
             const ip = getClientIP(request);
-          
+
             // Store session security info
             const sessionId = crypto.randomUUID();
             activeSessions.set(sessionId, {
@@ -160,7 +164,7 @@ const config: NextAuthConfig = {
         token.email = extendedUser.email;
         token.permission = extendedUser.permission;
         token.apiToken = extendedUser.token;
-        
+
         // Add security information to token
         token.sessionId = extendedUser.sessionId || "";
         token.fingerprint = extendedUser.fingerprint || "";
@@ -183,14 +187,14 @@ const config: NextAuthConfig = {
       if (token) {
         const extendedToken = token as ExtendedJWT;
         const extendedSession = session as unknown as ExtendedSession;
-        
+
         extendedSession.user.id = extendedToken.id;
         extendedSession.user.name = extendedToken.username;
         extendedSession.user.email = extendedToken.email;
         extendedSession.user.permission = extendedToken.permission;
         extendedSession.user.token = extendedToken.apiToken;
         extendedSession.user.sessionId = extendedToken.sessionId;
-        
+
         return extendedSession;
       }
       return session as unknown as ExtendedSession;
@@ -200,7 +204,7 @@ const config: NextAuthConfig = {
     async authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const { nextUrl } = request;
-      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
 
       if (isOnDashboard) {
         if (!isLoggedIn) {
@@ -214,7 +218,7 @@ const config: NextAuthConfig = {
 
         if (sessionId) {
           const storedSession = activeSessions.get(sessionId);
-          
+
           if (!storedSession) {
             // Session not found in store
             console.log("Session not found in active sessions store");
@@ -229,10 +233,13 @@ const config: NextAuthConfig = {
           }
 
           // Check if IP changed (careful - users can have dynamic IPs)
-          if (process.env.NODE_ENV === "production" && storedSession.ip !== currentIP) {
-            console.log("IP address change detected", { 
-              stored: storedSession.ip, 
-              current: currentIP 
+          if (
+            process.env.NODE_ENV === "production" &&
+            storedSession.ip !== currentIP
+          ) {
+            console.log("IP address change detected", {
+              stored: storedSession.ip,
+              current: currentIP,
             });
             // Uncomment to enforce IP matching
             // return false;
@@ -252,14 +259,14 @@ const config: NextAuthConfig = {
 
         return true;
       } else if (isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', nextUrl));
+        return Response.redirect(new URL("/dashboard", nextUrl));
       }
 
       return true;
     },
 
     async signOut({ token }: { token: { sessionId?: string } }) {
-      if (token?.sessionId && typeof token.sessionId === 'string') {
+      if (token?.sessionId && typeof token.sessionId === "string") {
         activeSessions.delete(token.sessionId);
         console.log("Session cleaned up on signout");
       }
@@ -276,17 +283,18 @@ const config: NextAuthConfig = {
   // Enhanced security configuration
   cookies: {
     sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}${process.env.COOKIE_NAME}`,
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}${
+        process.env.COOKIE_NAME
+      }`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
         // Additional security flags
         // domain: process.env.NODE_ENV === 'production' ? '.http://localhost:3000' : undefined,
       },
     },
-
   },
 
   // Security configuration
@@ -294,7 +302,6 @@ const config: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,
 
   // basePath:process.env.AUTH_URL
-
 };
 
 export const { handlers, signIn, signOut, auth } = NextAuth(config);
@@ -304,34 +311,28 @@ function generateFingerprint(request: Request): string {
   const userAgent = request.headers.get("user-agent") || "";
   const acceptLanguage = request.headers.get("accept-language") || "";
   const acceptEncoding = request.headers.get("accept-encoding") || "";
-  
+
   // Create a fingerprint based on browser characteristics
   const fingerprint = crypto
     .createHash("sha256")
     .update(userAgent + acceptLanguage + acceptEncoding)
     .digest("hex");
-  
+
   return fingerprint;
 }
 
 function getClientIP(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   const realIP = request.headers.get("x-real-ip");
-  
+
   if (forwarded) {
     return forwarded.split(",")[0].trim();
   }
-  
+
   return realIP || "unknown";
 }
 
-
-
-
 // Utility function to invalidate all sessions for a user
-
-
-
 
 export async function invalidateUserSessions(userId: string): Promise<void> {
   for (const [sessionId, session] of activeSessions.entries()) {
@@ -356,7 +357,7 @@ export function getUserActiveSessionCount(userId: string): number {
 setInterval(() => {
   const now = Date.now();
   const maxAge = 15 * 60 * 1000; // 15 minutes
-  
+
   for (const [sessionId, session] of activeSessions.entries()) {
     if (now - session.lastActivity > maxAge) {
       activeSessions.delete(sessionId);

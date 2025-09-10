@@ -39,11 +39,15 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const SigninForm = ({ callbackUrl="/dashboard" }: { callbackUrl?: string }) => {
+const SigninForm = ({
+  callbackUrl = "/dashboard",
+}: {
+  callbackUrl?: string;
+}) => {
   const router = useRouter();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -57,34 +61,57 @@ const SigninForm = ({ callbackUrl="/dashboard" }: { callbackUrl?: string }) => {
     setLoginError(null); // Clear previous errors
 
     try {
-      const response = await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        redirect: false,
-        redirectTo: callbackUrl,
+      const csrfResponse = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfResponse.json();
+      // const response = await signIn(
+      //   "credentials",
+      //   {
+      //     username: values.username,
+      //     password: values.password,
+      //     redirect: false,
+      //     redirectTo: callbackUrl,
+      //   },
+      //   // {
+      //   //   headers: {
+      //   //     "Content-Type": "application/json",
+      //   //       "X-CSRFToken":  "",
+      //   //   },
+      //   // }
+      // );
+      const response = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: values.username,
+          password: values.password,
+          redirectTo: callbackUrl,
+          csrfToken: csrfToken,
+          json: true, 
+        }),
       });
       console.log(response);
-      
 
-      if (!response?.error) {
+      if (response.ok) {
         router.push("/dashboard");
       } else {
         // Handle different types of errors
-        switch (response.error) {
-          case "CredentialsSignin":
-            setLoginError("Invalid username or password. Please try again.");
-            break;
-          case "AccessDenied":
-            setLoginError(
-              "Access denied. Please contact support if this continues."
-            );
-            break;
-          case "Verification":
-            setLoginError("Please verify your account before signing in.");
-            break;
-          default:
-            setLoginError("Login failed. Please try again later.");
-        }
+        // switch (response.error) {
+        //   case "CredentialsSignin":
+        //     setLoginError("Invalid username or password. Please try again.");
+        //     break;
+        //   case "AccessDenied":
+        //     setLoginError(
+        //       "Access denied. Please contact support if this continues."
+        //     );
+        //     break;
+        //   case "Verification":
+        //     setLoginError("Please verify your account before signing in.");
+        //     break;
+        //   default:
+        //     setLoginError("Login failed. Please try again later.");
+        // }
       }
     } catch (error) {
       console.error("Sign in error:", error);
@@ -96,7 +123,6 @@ const SigninForm = ({ callbackUrl="/dashboard" }: { callbackUrl?: string }) => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
-
       {/* header message */}
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
@@ -108,8 +134,6 @@ const SigninForm = ({ callbackUrl="/dashboard" }: { callbackUrl?: string }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-
-
           {/* form */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -151,7 +175,6 @@ const SigninForm = ({ callbackUrl="/dashboard" }: { callbackUrl?: string }) => {
                         {...field}
                         disabled={isLoading}
                       />
-                     
                     </FormControl>
                     <FormMessage />
                   </FormItem>
