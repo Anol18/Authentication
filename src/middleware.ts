@@ -2,6 +2,11 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+
+// Create the internationalization middleware
+const intlMiddleware = createIntlMiddleware(routing);
 
 // Rate limiting store (use Redis in production)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -77,11 +82,38 @@ function shouldSkipAuth(pathname: string): boolean {
   return skipPaths.some(path => pathname.startsWith(path)) || isStaticAsset(pathname);
 }
 
+function shouldSkipIntl(pathname: string): boolean {
+  // Skip internationalization for API routes, trpc, _next, _vercel, and files with dots
+  return (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/trpc') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/_vercel') ||
+    pathname.includes('.')
+  );
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
   
   try {
+    // Handle internationalization FIRST and COMPLETELY
+    if (!shouldSkipIntl(pathname)) {
+
+      
+      // Let intl middleware handle everything related to internationalization
+      const intlResponse = intlMiddleware(request);
+      
+      if (intlResponse) {
+    
+        
+        // Add security headers to the intl response
+        addSecurityHeaders(intlResponse, false);
+        return intlResponse;
+      }
+    }
+
     // Skip rate limiting and auth for static assets and auth routes
     if (shouldSkipAuth(pathname)) {
       const response = NextResponse.next();
@@ -215,13 +247,7 @@ function addSecurityHeaders(response: NextResponse, strict: boolean = true): voi
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (NextAuth internal routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, robots.txt, sitemap.xml (common static files)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    // Match all paths except those starting with api, trpc, _next, _vercel, and files with dots
+    '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
   ]
 }

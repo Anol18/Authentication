@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import Signout from "@/components/common/Signout";
 import DynamicBreadcrumb from "@/components/common/DynamicBreadCrumb";
+import QueryProvider from "./QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function RootLayout({
   children,
@@ -55,28 +57,25 @@ export default async function RootLayout({
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb> */}
-              <DynamicBreadcrumb/>
-              
+              <DynamicBreadcrumb />
             </div>
             <div className="w-full flex justify-end px-4">
-            
-               <Signout />
-             
-              </div>
+              <Signout />
+            </div>
           </header>
-           <Separator
-                orientation="horizontal"
-                className="mr-2 data-[orientation=vertical]:h-4"
-              />
+          <Separator
+            orientation="horizontal"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
           <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
             {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
               <div className="bg-muted/50 aspect-video rounded-xl" />
               <div className="bg-muted/50 aspect-video rounded-xl" />
               <div className="bg-muted/50 aspect-video rounded-xl" />
             </div> */}
-            {children}
+            <QueryProvider>{children}</QueryProvider>
+            <Toaster />
             {/* <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" /> */}
-         
           </div>
         </SidebarInset>
       </SidebarProvider>
