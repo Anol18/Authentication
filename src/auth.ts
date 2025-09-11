@@ -92,7 +92,7 @@ const config: NextAuthConfig = {
           const { username, password } = loginSchema.parse(credentials);
           // const contentType = request.headers?.get("content-type");
           // console.log("contentType",contentType);
-          request.headers.set("content-type", "application/json");
+          // request.headers.set("content-type", "application/json");
           // Get user from database
           const response = await signin({
             username,

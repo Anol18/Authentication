@@ -23,7 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
@@ -59,59 +59,29 @@ const SigninForm = ({
   async function onSubmit(values: FormData) {
     setIsLoading(true);
     setLoginError(null); // Clear previous errors
-
     try {
       const csrfResponse = await fetch("/api/auth/csrf");
       const { csrfToken } = await csrfResponse.json();
-      // const response = await signIn(
-      //   "credentials",
-      //   {
-      //     username: values.username,
-      //     password: values.password,
-      //     redirect: false,
-      //     redirectTo: callbackUrl,
-      //   },
-      //   // {
-      //   //   headers: {
-      //   //     "Content-Type": "application/json",
-      //   //       "X-CSRFToken":  "",
-      //   //   },
-      //   // }
-      // );
       const response = await fetch("/api/auth/callback/credentials", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
         },
         body: JSON.stringify({
           username: values.username,
           password: values.password,
           redirectTo: callbackUrl,
           csrfToken: csrfToken,
-          json: true, 
+          json: true,
         }),
       });
-      console.log(response);
 
       if (response.ok) {
         router.push("/dashboard");
       } else {
-        // Handle different types of errors
-        // switch (response.error) {
-        //   case "CredentialsSignin":
-        //     setLoginError("Invalid username or password. Please try again.");
-        //     break;
-        //   case "AccessDenied":
-        //     setLoginError(
-        //       "Access denied. Please contact support if this continues."
-        //     );
-        //     break;
-        //   case "Verification":
-        //     setLoginError("Please verify your account before signing in.");
-        //     break;
-        //   default:
-        //     setLoginError("Login failed. Please try again later.");
-        // }
+        // Handle error
+        setLoginError("Login failed. Please try again later.");
       }
     } catch (error) {
       console.error("Sign in error:", error);

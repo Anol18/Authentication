@@ -10,9 +10,10 @@ const credentials = {
   password: "123456",
 };
 
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 import { getApiToken } from "@/lib/getApiToken";
+import { serverFetch } from "@/lib/serverFetch";
 
 export async function POST(req: NextRequest) {
   const body: UserInput = await req.json();
@@ -43,10 +44,19 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  // const token = await getApiToken({ req });
+  // console.log("session >>>", token);
+
+
+  const res = await serverFetch("/api/useres",{
+    
+  },req);
+
+  // const d = await res.json();
+  // console.log(d);
   
-const token = await getApiToken({ req });
-  console.log("session >>>", token);
-  return Response.json({
-    data: "session",
-  });
+  return NextResponse.json(
+    { data: "res" },
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
 }

@@ -1,6 +1,9 @@
-"use server";
 
-import { apiFetch } from "@/lib/apiClient";
+
+import { clientFetch } from "@/lib/clientFetch";
+
+
+
 
 export const signin = async ({
   username,
@@ -10,7 +13,7 @@ export const signin = async ({
   password: string;
 }) => {
   try {
-    const res = await apiFetch("/auth/signin", {
+    const res = await clientFetch("/auth/signin", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
