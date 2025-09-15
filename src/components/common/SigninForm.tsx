@@ -25,6 +25,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 // import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+
 
 const formSchema = z.object({
   username: z
@@ -44,6 +46,7 @@ const SigninForm = ({
 }: {
   callbackUrl?: string;
 }) => {
+  const t = useTranslations('signin');
   const router = useRouter();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,11 +74,14 @@ const SigninForm = ({
         body: JSON.stringify({
           username: values.username,
           password: values.password,
-          redirectTo: callbackUrl,
+          // redirect:false,
+          // redirectTo: callbackUrl,
           csrfToken: csrfToken,
           json: true,
         }),
+        // redirect: "manual",
       });
+
 
       if (response.ok) {
         router.push("/dashboard");
@@ -94,13 +100,14 @@ const SigninForm = ({
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       {/* header message */}
+     
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Sign In
+             {t('title')}
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your username and password to access your account
+           {t('subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -118,10 +125,10 @@ const SigninForm = ({
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>  {t('username')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your username"
+                        placeholder={t('usernamePlaceholder')}
                         {...field}
                         disabled={isLoading}
                       />
@@ -137,11 +144,11 @@ const SigninForm = ({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel> {t('password')}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('passwordPlaceholder')}
                         {...field}
                         disabled={isLoading}
                       />
@@ -153,7 +160,7 @@ const SigninForm = ({
 
               {/* submit button */}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? t('loadingsSigninLabel') : t('signinLabel') }
               </Button>
             </form>
           </Form>

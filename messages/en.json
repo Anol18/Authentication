@@ -1,0 +1,16 @@
+{
+  "HomePage": {
+    "title": "Hello world!"
+  },
+   "signin": {
+    "title": "Sign In",
+    "subtitle":"Enter your username and password to access your account",
+    "username":"Username",
+    "usernamePlaceholder":"Enter your username",
+    "password":"Password",
+    "passwordPlaceholder":"Enter your password",
+    "loadingsSigninLabel":"Signing in...",
+    "signinLabel":"Sign In"
+
+  }
+}

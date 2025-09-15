@@ -1,37 +1,30 @@
 "use client"
 import DataTable from "@/components/common/TanstackTable";
 import { Button } from "@/components/ui/button";
+import { clientFetch } from "@/lib/clientFetch";
+import { useMockDataQuery } from "@/services/mock/useMock";
 import { ColumnDef } from "@tanstack/react-table";
+import { Edit2Icon } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Example usage with sample data
 interface Person {
   id: number;
-  firstName: string;
-  lastName: string;
+  fName: string;
+  lName: string;
   age: number;
   email: string;
   status: string;
 }
 
-const sampleData: Person[] = [
-  { id: 1, firstName: 'John', lastName: 'Doe', age: 30, email: 'john@example.com', status: 'Active' },
-  { id: 2, firstName: 'Jane', lastName: 'Smith', age: 25, email: 'jane@example.com', status: 'Active' },
-  { id: 3, firstName: 'Bob', lastName: 'Johnson', age: 35, email: 'bob@example.com', status: 'Inactive' },
-  { id: 4, firstName: 'Alice', lastName: 'Williams', age: 28, email: 'alice@example.com', status: 'Active' },
-  { id: 5, firstName: 'Charlie', lastName: 'Brown', age: 32, email: 'charlie@example.com', status: 'Pending' },
-  { id: 6, firstName: 'Diana', lastName: 'Davis', age: 27, email: 'diana@example.com', status: 'Active' },
-  { id: 7, firstName: 'Eve', lastName: 'Miller', age: 29, email: 'eve@example.com', status: 'Inactive' },
-  { id: 8, firstName: 'Frank', lastName: 'Wilson', age: 31, email: 'frank@example.com', status: 'Active' },
-  { id: 9, firstName: 'Grace', lastName: 'Moore', age: 26, email: 'grace@example.com', status: 'Pending' },
-  { id: 10, firstName: 'Henry', lastName: 'Taylor', age: 33, email: 'henry@example.com', status: 'Active' },
-  { id: 11, firstName: 'Ivy', lastName: 'Anderson', age: 24, email: 'ivy@example.com', status: 'Active' },
-  { id: 12, firstName: 'Jack', lastName: 'Thomas', age: 36, email: 'jack@example.com', status: 'Inactive' },
-];
 
 export default function App() {
-  const columns: ColumnDef<Person>[] = useMemo(
+ 
+  const {data} = useMockDataQuery();
+  console.log("data",data);
+  
+   const columns: ColumnDef<Person>[] = useMemo(
     () => [
       {
         accessorKey: 'id',
@@ -39,14 +32,14 @@ export default function App() {
         cell: ({ row }) => <div className="font-medium">{row.getValue('id')}</div>,
       },
       {
-        accessorKey: 'firstName',
+        accessorKey: 'fName',
         header: 'First Name',
-        cell: ({ row }) => <div>{row.getValue('firstName')}</div>,
+        cell: ({ row }) => <div>{row.getValue('fName')}</div>,
       },
       {
-        accessorKey: 'lastName',
+        accessorKey: 'lName',
         header: 'Last Name',
-        cell: ({ row }) => <div>{row.getValue('lastName')}</div>,
+        cell: ({ row }) => <div>{row.getValue('lName')}</div>,
       },
       {
         accessorKey: 'age',
@@ -78,20 +71,39 @@ export default function App() {
           );
         },
       },
+       {
+        accessorKey: 'Action',
+        // header: 'Status',
+        cell: ({row}) => {
+          console.log("row,",row.id);
+          
+         
+          return (
+            <Link href={`/dashboard/data/update/${row.id}`}>
+            <Button variant={"outline"}>
+              <Edit2Icon/>
+            </Button>
+            </Link>
+            
+          );
+        },
+      },
     ],
     []
   );
+
+
 
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6">Reusable TanStack Table Example</h1>
      <div className="flex justify-end px-2">
-    <Link href={"/dashboard/add-data"}>
+    <Link href={"/dashboard/data/add"}>
       <Button>Add Data</Button>
     </Link>
      </div>
       <DataTable
-        data={sampleData}
+        data={data ||[]}
         columns={columns}
         enableSorting={true}
         enableFiltering={true}
